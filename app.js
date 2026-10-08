@@ -20,7 +20,6 @@ app.use('/users', require('./routes/users'));
 app.use('/towns', require('./routes/towns'));
 // app.use('/restaurants', require('./routes/restaurants'));   // Andi + Helayn
 // app.use('/restaurants', require('./routes/search'));        // Helayn (search/nearby/top-rated/open-now: mount BEFORE restaurants)
-// app.use('/towns', require('./routes/towns'));               // Helayn
 // app.use('/reservations', require('./routes/reservations')); // Ashton + Nadia
 // app.use('/reviews', require('./routes/reviews'));           // Mhir
 
