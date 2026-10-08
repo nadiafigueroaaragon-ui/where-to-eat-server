@@ -1,7 +1,7 @@
 const express = require('express');
 const Restaurant = require('../models/Restaurant');
 const router = express.Router();
-
+const { PRICE_LEVELS } = require('../config/constants');
 // GET /restaurants/search?town=&area=&cuisine=&diningType=&priceLevel=&minRating=&maxPrice=&sort=rating|reviews|price
 router.get('/search', async (req, res, next) => {
   try {
@@ -84,6 +84,48 @@ router.get('/nearby', async (req, res, next) => {
       };
     });
     res.status(200).json(results);
+  } catch (err) { next(err); }
+});
+
+// GET /restaurants/top-rated?town=&lat=&lng=   (all optional)
+// Best-match score (0-100) = 50% rating + 25% reviews + 15% price + 10% distance
+router.get('/top-rated', async (req, res, next) => {
+  try {
+    const { town, lat, lng } = req.query;
+    const hasPoint = lat !== undefined && lng !== undefined;
+    const la = Number(lat), lo = Number(lng);
+    if (hasPoint && (Number.isNaN(la) || Number.isNaN(lo))) {
+      return res.status(400).json({ message: 'lat and lng must be numbers' });
+    }
+
+    const filter = { status: 'approved' };
+    if (town) filter.town = town;
+    const all = await Restaurant.find(filter).lean();
+
+    const scored = all.map((r) => {
+      const ratingPart = (r.rating || 0) / 5;
+      const reviewPart = Math.min((r.reviewCount || 0) / 50, 1); // 50 or more reviews = full marks
+      const priceIndex = PRICE_LEVELS.indexOf(r.priceLevel);
+      const pricePart = priceIndex < 0 ? 0.5 : 1 - priceIndex / (PRICE_LEVELS.length - 1); // cheaper scores higher
+
+      let distancePart = 0.5; // neutral when the traveler's location is unknown
+      let meters;
+      if (hasPoint) {
+        const [rLng, rLat] = r.location.coordinates;
+        meters = distanceMeters(la, lo, rLat, rLng);
+        distancePart = Math.max(0, 1 - meters / 5000); // 0 m = full marks, 5 km or more = 0
+      }
+
+      const score = 0.5 * ratingPart + 0.25 * reviewPart + 0.15 * pricePart + 0.1 * distancePart;
+      return {
+        ...r,
+        matchScore: Math.round(score * 100),
+        ...(meters !== undefined && { distanceMeters: Math.round(meters) }),
+      };
+    });
+
+    scored.sort((a, b) => b.matchScore - a.matchScore);
+    res.status(200).json(scored);
   } catch (err) { next(err); }
 });
 
