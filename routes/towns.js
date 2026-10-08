@@ -3,10 +3,24 @@ const Town = require('../models/Town');
 const router = express.Router();
 const { protect, requireRole } = require('../middleware/auth');
 const validateId = require('../middleware/validateId');
+const Restaurant = require('../models/Restaurant');
 
 router.get('/', async (req, res, next) => {
   try {
     res.status(200).json(await Town.find().sort({ name: 1 }));
+  } catch (err) { next(err); }
+});
+
+// GET /towns/:id/restaurants - approved restaurants in one town
+router.get('/:id/restaurants', validateId(), async (req, res, next) => {
+  try {
+    const town = await Town.findById(req.params.id);
+    if (!town) return res.status(404).json({ message: 'Town not found' });
+
+    const restaurants = await Restaurant.find({ town: town.name, status: 'approved' })
+      .sort({ rating: -1, reviewCount: -1 });
+
+    res.status(200).json({ town, count: restaurants.length, restaurants });
   } catch (err) { next(err); }
 });
 
