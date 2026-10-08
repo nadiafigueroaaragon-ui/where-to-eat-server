@@ -1,16 +1,8 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const Town = require('../models/Town');
 const router = express.Router();
-
-// TODO: import Nadia's auth and admin middleware, then add them to POST, PUT, DELETE
-
-const checkId = (req, res, next) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid town ID' });
-  }
-  next();
-};
+const { protect, requireRole } = require('../middleware/auth');
+const validateId = require('../middleware/validateId');
 
 router.get('/', async (req, res, next) => {
   try {
@@ -18,7 +10,7 @@ router.get('/', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.get('/:id', checkId, async (req, res, next) => {
+router.get('/:id', validateId(), async (req, res, next) => {
   try {
     const town = await Town.findById(req.params.id);
     if (!town) return res.status(404).json({ message: 'Town not found' });
@@ -26,13 +18,13 @@ router.get('/:id', checkId, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.post('/', async (req, res, next) => {
+router.post('/', protect, requireRole('admin'), async (req, res, next) => {
   try {
     res.status(201).json(await Town.create(req.body));
   } catch (err) { next(err); }
 });
 
-router.put('/:id', checkId, async (req, res, next) => {
+router.put('/:id', protect, requireRole('admin'), validateId(), async (req, res, next) => {
   try {
     const town = await Town.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -43,7 +35,7 @@ router.put('/:id', checkId, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.delete('/:id', checkId, async (req, res, next) => {
+router.delete('/:id', protect, requireRole('admin'), validateId(), async (req, res, next) => {
   try {
     const town = await Town.findByIdAndDelete(req.params.id);
     if (!town) return res.status(404).json({ message: 'Town not found' });
