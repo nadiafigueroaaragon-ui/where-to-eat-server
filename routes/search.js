@@ -1,7 +1,7 @@
 const express = require('express');
 const Restaurant = require('../models/Restaurant');
 const router = express.Router();
-const { PRICE_LEVELS } = require('../config/constants');
+const { PRICE_LEVELS, DAYS, TIMEZONE } = require('../config/constants');
 // GET /restaurants/search?town=&area=&cuisine=&diningType=&priceLevel=&minRating=&maxPrice=&sort=rating|reviews|price
 router.get('/search', async (req, res, next) => {
   try {
@@ -126,6 +126,51 @@ router.get('/top-rated', async (req, res, next) => {
 
     scored.sort((a, b) => b.matchScore - a.matchScore);
     res.status(200).json(scored);
+  } catch (err) { next(err); }
+});
+
+const toMin = (hhmm) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+};
+
+// Current day name (spelled like DAYS) and minutes since midnight, in Philippine time
+function manilaClock(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIMEZONE, weekday: 'long', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(date);
+  const get = (type) => parts.find((p) => p.type === type).value;
+  return { day: get('weekday').toLowerCase(), minutes: Number(get('hour')) * 60 + Number(get('minute')) };
+}
+
+// Is a restaurant open right now? Handles closed days and places that close after midnight
+function isOpenNow(hours) {
+  const now = manilaClock();
+  const yesterday = DAYS[(DAYS.indexOf(now.day) + 6) % 7];
+  const today = hours?.[now.day];
+  const before = hours?.[yesterday];
+
+  if (today && !today.closed) {
+    const open = toMin(today.open), close = toMin(today.close);
+    // normal hours, or hours that run past midnight (close is earlier than open)
+    if (close > open ? now.minutes >= open && now.minutes < close : now.minutes >= open) return true;
+  }
+  if (before && !before.closed) {
+    const open = toMin(before.open), close = toMin(before.close);
+    // yesterday's late night is still running (for example, open until 1 AM)
+    if (close <= open && now.minutes < close) return true;
+  }
+  return false;
+}
+
+// GET /restaurants/open-now?town=
+router.get('/open-now', async (req, res, next) => {
+  try {
+    const filter = { status: 'approved' };
+    if (req.query.town) filter.town = req.query.town;
+    const all = await Restaurant.find(filter).lean();
+    const open = all.filter((r) => isOpenNow(r.openingHours)).map((r) => ({ ...r, openNow: true }));
+    res.status(200).json(open);
   } catch (err) { next(err); }
 });
 
