@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-
+import { Menu, X } from 'lucide-react'
 const leftLinks = [
   { to: '/', label: 'Home' },
   { to: '/towns', label: 'Towns' },
@@ -57,7 +57,7 @@ export default function Navbar() {
           aria-label="Toggle menu"
           className="col-start-3 justify-self-end rounded-md px-2 py-1 text-2xl text-cream md:hidden"
         >
-          {open ? '✕' : '☰'}
+          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </nav>
 
