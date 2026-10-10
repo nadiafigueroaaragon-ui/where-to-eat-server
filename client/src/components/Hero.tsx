@@ -1,6 +1,11 @@
 import { Search } from 'lucide-react'
 
-export default function Hero() {
+type HeroProps = {
+  value: string
+  onChange: (value: string) => void
+}
+
+export default function Hero({ value, onChange }: HeroProps) {
   return (
     <section className="px-4 pb-6 pt-12 text-center sm:px-8 sm:pt-16">
       <h1 className="font-script text-5xl leading-tight text-brown sm:text-6xl">
@@ -11,7 +16,10 @@ export default function Hero() {
         <Search className="h-5 w-5 shrink-0 text-brown" aria-hidden="true" />
         <input
           type="text"
-          placeholder="Search"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Search a city, restaurant, or cuisine"
+          aria-label="Search restaurants"
           className="w-full bg-transparent text-sm text-brown placeholder:text-brown/50 focus:outline-none"
         />
       </div>

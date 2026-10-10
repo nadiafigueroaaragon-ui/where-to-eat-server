@@ -1,6 +1,7 @@
 export type Option = { value: string; label: string }
 
 export type Filters = {
+  search: string
   rating: string
   walkMinutes: string
   priceLevel: string
@@ -10,6 +11,7 @@ export type Filters = {
 }
 
 export const emptyFilters: Filters = {
+  search: '',
   rating: '',
   walkMinutes: '',
   priceLevel: '',

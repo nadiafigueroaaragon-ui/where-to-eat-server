@@ -27,7 +27,7 @@ export default function Home() {
 
   return (
     <main className="pb-16">
-      <Hero />
+      <Hero value={filters.search} onChange={(search) => handleFilters({ ...filters, search })} />
       <FilterChips filters={filters} onChange={handleFilters} />
 
       {locationFailed && (

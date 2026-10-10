@@ -10,12 +10,19 @@ export function useRestaurants(filters: Filters, coords: Coords | null, waiting:
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
+  const [debouncedSearch, setDebouncedSearch] = useState(filters.search.trim())
 
-  const { rating, priceLevel, sort, cuisine, diningType, walkMinutes } = filters
+  const { search, rating, priceLevel, sort, cuisine, diningType, walkMinutes } = filters
   const lat = coords?.lat
   const lng = coords?.lng
   // Derived while rendering: use the distance endpoint only when we know where the traveler is
   const byDistance = Boolean(walkMinutes) && lat !== undefined && lng !== undefined
+
+  // Wait until the person stops typing before searching
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 400)
+    return () => clearTimeout(timer)
+  }, [search])
 
   useEffect(() => {
     if (waiting) return // wait for the browser to give us the location
@@ -25,6 +32,7 @@ export function useRestaurants(filters: Filters, coords: Coords | null, waiting:
     setError('')
 
     const shared = {
+      q: debouncedSearch || undefined,
       minRating: rating || undefined,
       priceLevel: priceLevel || undefined,
       cuisine: cuisine || undefined,
@@ -52,7 +60,7 @@ export function useRestaurants(filters: Filters, coords: Coords | null, waiting:
       })
 
     return () => controller.abort()
-  }, [rating, priceLevel, sort, cuisine, diningType, walkMinutes, byDistance, lat, lng, waiting, attempt])
+  }, [debouncedSearch, rating, priceLevel, sort, cuisine, diningType, walkMinutes, byDistance, lat, lng, waiting, attempt])
 
   return { restaurants, loading: loading || waiting, error, retry: () => setAttempt((a) => a + 1) }
 }
