@@ -12,6 +12,7 @@ const hours = (everyDay, overrides = {}) =>
 const data = [
   {
     name: 'Recado', area: 'Filinvest Mimosa+ Leisure City',
+    imageUrl: '/images/Recado.jpg',
     address: 'Filinvest Mimosa+, 2 Acacia Dr, Clark Freeport Zone, Mabalacat City, Pampanga, 2023',
     lat: 15.1834, lng: 120.5312,
     cuisine: 'Kapampangan/Filipino', diningType: 'fine dining', priceLevel: 'expensive',
@@ -21,6 +22,7 @@ const data = [
   },
   {
     name: 'Consuelo', area: 'Clark Freeport Zone (Barnhouse Precinct)',
+    imageUrl: '/images/Consuelo.jpg',
     address: 'Barn House Bldg, 2092 R. C. Santos St, Clark Freeport Zone, Mabalacat, Pampanga, 2023',
     lat: 15.183292, lng: 120.525675,
     cuisine: 'Kapampangan/Filipino', diningType: 'casual dining', priceLevel: 'moderate',
@@ -30,6 +32,7 @@ const data = [
   },
   {
     name: "Italianni's SM Clark", area: 'SM City Clark Complex',
+    imageUrl: '/images/Italiannis.jpg',
     address: 'Ground Floor, Tech Hub 9, SM City Clark, Manuel A. Roxas Hwy, Clark Freeport Zone, Pampanga',
     lat: 15.170372, lng: 120.579127,
     cuisine: 'Western/Italian', diningType: 'casual dining', priceLevel: 'moderate',
@@ -39,6 +42,7 @@ const data = [
   },
   {
     name: 'Toscana Dining', area: 'Midori Hotel & Casino, Clark Freeport Zone',
+    imageUrl: '/images/Toscana.jpg',
     address: '1st Floor, Midori Clark Hotel & Casino, Claro M. Recto Hwy, Clark Freeport Zone, Pampanga',
     lat: 15.193264, lng: 120.521878,
     cuisine: 'Western/Italian', diningType: 'buffet', priceLevel: 'expensive',
@@ -48,6 +52,7 @@ const data = [
   },
   {
     name: 'Manam Comfort Filipino SM City Clark', area: 'SM City Clark Complex',
+    imageUrl: '/images/Manam.jpg',
     address: 'Ground Floor, SM City Clark Extension, Manuel A. Roxas Hwy, Clark Freeport Zone, Pampanga',
     lat: 15.169983, lng: 120.580681,
     cuisine: 'Kapampangan/Filipino', diningType: 'casual dining', priceLevel: 'moderate',
@@ -57,6 +62,7 @@ const data = [
   },
   {
     name: 'Unseen Cafe', area: 'Santa Maria, Mabalacat City',
+    imageUrl: '/images/unseen.jpg',
     address: 'Sitio Libutad, Brgy. Santa Maria, Mabalacat City, Pampanga',
     lat: 15.226654, lng: 120.594247,
     cuisine: 'Cafe/Bakery', diningType: 'cafe/bakery', priceLevel: 'cheap',
@@ -69,6 +75,7 @@ const data = [
   },
   {
     name: 'Hard Rock Cafe Clark', area: 'Hann Casino Resort, Clark Freeport Zone',
+    imageUrl: '/images/HardRock.jpg',
     address: 'G/F Unit 102, Hann Resorts, C. M. Recto Hwy, Clark Freeport Zone, Pampanga',
     lat: 15.192066, lng: 120.524074,
     cuisine: 'Western/Italian', diningType: 'resto bar', priceLevel: 'expensive',
@@ -78,6 +85,7 @@ const data = [
   },
   {
     name: 'Binulo Restaurant', area: 'Clark Freeport Zone (M.A. Roxas Hwy)',
+    imageUrl: '/images/Binulo.jpg',
     address: 'Bldg. N6410-6413, Manuel A. Roxas Highway, Clark Freeport Zone, Pampanga, 2009',
     lat: 15.183764, lng: 120.527112,
     cuisine: 'Kapampangan/Filipino', diningType: 'casual dining', priceLevel: 'moderate',
@@ -87,6 +95,7 @@ const data = [
   },
   {
     name: 'Casa Salome', area: 'Duquit, Mabalacat City',
+    imageUrl: '/images/Casa.jpg',
     address: 'Balacat Avenue, 7206 Legazpi Ext, Purok 7, Brgy. Duquit, Mabalacat City, Pampanga, 2010',
     lat: 15.179311, lng: 120.614627,
     cuisine: 'Kapampangan/Filipino', diningType: 'casual dining', priceLevel: 'moderate',
@@ -96,6 +105,7 @@ const data = [
   },
   {
     name: 'Couscousi Mediterranean Grill', area: 'Clark Freeport Zone (Barnhouse Precinct)',
+    imageUrl: '/images/Couscousi.jpg',
     address: 'RC Santos St., Parade Grounds Barnhouse 2079, Clark Freeport Zone, Mabalacat, Pampanga, 2023',
     lat: 15.181868, lng: 120.521943,
     cuisine: 'Mediterranean', diningType: 'casual dining', priceLevel: 'moderate',

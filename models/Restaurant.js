@@ -53,6 +53,7 @@ const restaurantSchema = new mongoose.Schema(
     openingHours,
     description: { type: String, trim: true, maxlength: 1000 },
     // Computed from APPROVED reviews only (Mhir's review code updates these). Never typed in.
+        imageUrl: { type: String, trim: true },
     rating: { type: Number, default: 0, min: 0, max: 5 },
     reviewCount: { type: Number, default: 0, min: 0 },
     status: { type: String, enum: RESTAURANT_STATUSES, default: 'pending' },
