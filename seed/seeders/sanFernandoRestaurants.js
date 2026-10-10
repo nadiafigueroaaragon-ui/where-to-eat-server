@@ -3,7 +3,7 @@
 // !! VERIFY BEFORE THE DEFENSE !!  The names/descriptions come from the team guide. Everything else
 // (coordinates, hours, prices, seats, exact addresses) is a ROUGH PLACEHOLDER I could not verify.
 // For each place: open Google Maps -> right-click the pin -> click the numbers to copy "lat, lng" -> fix lat/lng below.
-const { DAYS } = require('../config/constants');
+const { DAYS } = require('../../config/constants');
 
 const hours = (open, close, closedDays = []) =>
   Object.fromEntries(DAYS.map((d) => [d, { open, close, closed: closedDays.includes(d) }]));

@@ -4,7 +4,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Restaurant = require('../models/Restaurant');
 const User = require('../models/User');
-const build = require('../seed/sanFernandoRestaurants');
+const build = require('../seeder/sanFernandoRestaurants');
 
 (async () => {
   await mongoose.connect(process.env.MONGO_URI);
