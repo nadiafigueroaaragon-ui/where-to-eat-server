@@ -1,13 +1,11 @@
 import { useState } from 'react'
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
+
 const leftLinks = [
   { to: '/', label: 'Home' },
   { to: '/towns', label: 'Towns' },
-]
-const rightLinks = [
-  { to: '/reviews', label: 'Reviews' },
-  { to: '/login', label: 'Login' },
 ]
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -15,8 +13,28 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? 'underline underline-offset-4' : ''
   }`
 
+const pillClass =
+  'rounded-full bg-sun px-4 py-1.5 text-xs font-semibold uppercase text-brown transition hover:brightness-95'
+
 export default function Navbar() {
   const [open, setOpen] = useState(false)
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
+
+  // Links change by role
+  const rightLinks = [
+    { to: '/reviews', label: 'Reviews' },
+    ...(user?.role === 'admin' ? [{ to: '/admin/towns', label: 'Manage towns' }] : []),
+    ...(user ? [] : [{ to: '/login', label: 'Login' }]),
+  ]
+
+  const handleLogout = () => {
+    logout()
+    setOpen(false)
+    navigate('/')
+  }
+
+  const firstName = user?.name.split(' ')[0]
 
   return (
     <header className="sticky top-0 z-50 bg-brown">
@@ -42,12 +60,18 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          <Link
-            to="/register"
-            className="rounded-full bg-sun px-4 py-1.5 text-xs font-semibold uppercase text-brown transition hover:brightness-95"
-          >
-            Sign up
-          </Link>
+          {user ? (
+            <>
+              <span className="text-sm text-cream/80">Hi, {firstName}</span>
+              <button type="button" onClick={handleLogout} className={pillClass}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <Link to="/register" className={pillClass}>
+              Sign up
+            </Link>
+          )}
         </div>
 
         {/* Menu button (mobile) */}
@@ -69,13 +93,18 @@ export default function Navbar() {
               {l.label}
             </NavLink>
           ))}
-          <Link
-            to="/register"
-            onClick={() => setOpen(false)}
-            className="w-fit rounded-full bg-sun px-4 py-1.5 text-xs font-semibold uppercase text-brown"
-          >
-            Sign up
-          </Link>
+          {user ? (
+            <>
+              <span className="text-sm text-cream/80">Hi, {firstName}</span>
+              <button type="button" onClick={handleLogout} className={`w-fit ${pillClass}`}>
+                Log out
+              </button>
+            </>
+          ) : (
+            <Link to="/register" onClick={() => setOpen(false)} className={`w-fit ${pillClass}`}>
+              Sign up
+            </Link>
+          )}
         </div>
       )}
     </header>
