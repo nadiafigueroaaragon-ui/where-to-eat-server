@@ -2,11 +2,24 @@ const express = require('express');
 const Restaurant = require('../models/Restaurant');
 const router = express.Router();
 const { PRICE_LEVELS, DAYS, TIMEZONE } = require('../config/constants');
-// GET /restaurants/search?town=&area=&cuisine=&diningType=&priceLevel=&minRating=&maxPrice=&sort=rating|reviews|price
+
+// Turns search text into a case-insensitive "contains" match on name, town, area, or cuisine.
+// Special characters are escaped so input like "(" cannot break the regex.
+function textFilter(q) {
+  if (typeof q !== 'string' || !q.trim()) return null;
+  const safe = q.trim().slice(0, 60).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rx = new RegExp(safe, 'i');
+  return { $or: [{ name: rx }, { town: rx }, { area: rx }, { cuisine: rx }] };
+}
+
+// GET /restaurants/search?q=&town=&area=&cuisine=&diningType=&priceLevel=&minRating=&maxPrice=&sort=rating|reviews|price
 router.get('/search', async (req, res, next) => {
   try {
-    const { town, area, cuisine, diningType, priceLevel, minRating, maxPrice, sort } = req.query;
+    const { q, town, area, cuisine, diningType, priceLevel, minRating, maxPrice, sort } = req.query;
     const filter = { status: 'approved' };
+
+    const text = textFilter(q);
+    if (text) Object.assign(filter, text);
 
     if (town) filter.town = town;
     if (area) filter.area = area;
@@ -46,10 +59,10 @@ function distanceMeters(lat1, lng1, lat2, lng2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-// GET /restaurants/nearby?lat=&lng=&minutes=10
+// GET /restaurants/nearby?lat=&lng=&minutes=10&q=&cuisine=&diningType=&priceLevel=&minRating=
 router.get('/nearby', async (req, res, next) => {
   try {
-        const { lat, lng, cuisine, diningType, priceLevel, minRating } = req.query;
+    const { q, lat, lng, cuisine, diningType, priceLevel, minRating } = req.query;
     const minutes = req.query.minutes === undefined ? 10 : Number(req.query.minutes);
     const la = Number(lat), lo = Number(lng);
 
@@ -64,7 +77,7 @@ router.get('/nearby', async (req, res, next) => {
     }
 
     // $near uses Andi's 2dsphere index and returns the closest restaurants first
-        const filter = {
+    const filter = {
       status: 'approved',
       location: {
         $near: {
@@ -73,6 +86,10 @@ router.get('/nearby', async (req, res, next) => {
         },
       },
     };
+
+    const text = textFilter(q);
+    if (text) Object.assign(filter, text);
+
     if (cuisine) filter.cuisine = cuisine;
     if (diningType) filter.diningType = diningType;
     if (priceLevel) filter.priceLevel = priceLevel;
