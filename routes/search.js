@@ -49,7 +49,7 @@ function distanceMeters(lat1, lng1, lat2, lng2) {
 // GET /restaurants/nearby?lat=&lng=&minutes=10
 router.get('/nearby', async (req, res, next) => {
   try {
-    const { lat, lng } = req.query;
+        const { lat, lng, cuisine, diningType, priceLevel, minRating } = req.query;
     const minutes = req.query.minutes === undefined ? 10 : Number(req.query.minutes);
     const la = Number(lat), lo = Number(lng);
 
@@ -64,7 +64,7 @@ router.get('/nearby', async (req, res, next) => {
     }
 
     // $near uses Andi's 2dsphere index and returns the closest restaurants first
-    const found = await Restaurant.find({
+        const filter = {
       status: 'approved',
       location: {
         $near: {
@@ -72,7 +72,16 @@ router.get('/nearby', async (req, res, next) => {
           $maxDistance: minutes * WALK_METERS_PER_MIN,
         },
       },
-    }).lean();
+    };
+    if (cuisine) filter.cuisine = cuisine;
+    if (diningType) filter.diningType = diningType;
+    if (priceLevel) filter.priceLevel = priceLevel;
+    if (minRating !== undefined) {
+      if (Number.isNaN(Number(minRating))) return res.status(400).json({ message: 'minRating must be a number' });
+      filter.rating = { $gte: Number(minRating) };
+    }
+
+    const found = await Restaurant.find(filter).lean();
 
     const results = found.map((r) => {
       const [rLng, rLat] = r.location.coordinates;
