@@ -17,6 +17,7 @@ type Restaurant = {
   averageMealCost?: number;
   rating?: number;
   reviewCount?: number;
+  imageUrl?: string;
   images?: string[];
   location?: { type: "Point"; coordinates: [number, number] };
   openingHours?: Record<string, DayHours>;
@@ -115,7 +116,10 @@ export default function RestaurantDetails() {
     );
   }
 
-  const images = restaurant.images ?? [];
+  // Main photo first (imageUrl), then the rest of the gallery, without duplicates
+  const images = Array.from(
+    new Set([restaurant.imageUrl, ...(restaurant.images ?? [])].filter(Boolean) as string[])
+  );
   const hours = restaurant.openingHours ?? {};
   const today = todayKey();
   const [lng, lat] = restaurant.location?.coordinates ?? [];
