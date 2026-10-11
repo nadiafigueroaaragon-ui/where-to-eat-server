@@ -18,9 +18,9 @@ app.get('/', (req, res) => res.status(200).json({ message: 'Where to Eat? API is
 app.use('/auth', require('./routes/auth'));
 app.use('/users', require('./routes/users'));
 app.use('/towns', require('./routes/towns'));
-// app.use('/restaurants', require('./routes/restaurants'));   // Andi + Helayn
+app.use('/restaurants', require('./routes/restaurants'));   // Andi + Helayn
 // app.use('/restaurants', require('./routes/search'));        // Helayn (search/nearby/top-rated/open-now: mount BEFORE restaurants)
-// app.use('/reservations', require('./routes/reservations')); // Ashton + Nadia
+app.use('/reservations', require('./routes/reservations')); // Ashton + Nadia
 // app.use('/reviews', require('./routes/reviews'));           // Mhir
 
 app.use(notFound);     // must stay second-to-last
