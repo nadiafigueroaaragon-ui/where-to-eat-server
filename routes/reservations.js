@@ -1,89 +1,123 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Restaurant = require('../models/Restaurant');
-const Table = require('../models/Table');
 const Reservation = require('../models/Reservation');
+const SlotUsage = require('../models/SlotUsage');
 const { protect } = require('../middleware/auth');
 const validateId = require('../middleware/validateId');
-const S = require('../utils/slots');
+const B = require('../utils/bookingSlots');
 
 const router = express.Router();
-const isObjectId = (s) => typeof s === 'string' && /^[a-f0-9]{24}$/i.test(s);
+const ACTIVE = ['pending', 'confirmed'];
 
-// POST /reservations  (logged-in users)
-router.post('/', protect, async (req, res, next) => {
+// Atomically claim `guests` seats in one slot. Returns true only if they fit within seatsPerSlot.
+// The filter only matches while booked <= capacity - guests; the unique index turns "slot exists
+// but is full" (or a racing first insert) into E11000, which we resolve with a non-upsert retry.
+async function claimSeats(restaurantId, date, time, guests, capacity) {
+  const filter = { restaurant: restaurantId, date, time, booked: { $lte: capacity - guests } };
+  const update = { $inc: { booked: guests } };
   try {
-    const { restaurantId, date, time, guests, contactName, contactPhone } = req.body;
-    const g = Number(guests);
+    await SlotUsage.findOneAndUpdate(filter, update, { upsert: true, new: true });
+    return true;
+  } catch (err) {
+    if (err.code !== 11000) throw err;
+    const doc = await SlotUsage.findOneAndUpdate(filter, update, { new: true });
+    return !!doc; // null => the slot exists and is full
+  }
+}
+const releaseSeats = (r) =>
+  SlotUsage.updateOne({ restaurant: r.restaurant, date: r.date, time: r.time }, { $inc: { booked: -r.guests } });
 
-    if (!isObjectId(restaurantId)) return res.status(400).json({ message: 'Invalid restaurant' });
-    if (!Number.isInteger(g) || g < 1 || g > S.MAX_GUESTS) return res.status(400).json({ message: `Guests must be 1-${S.MAX_GUESTS}` });
-    if (!S.isValidDate(date)) return res.status(400).json({ message: 'Date must be YYYY-MM-DD' });
-    if (!S.startTimes().includes(time)) return res.status(400).json({ message: 'Invalid time slot' });
-    if (contactPhone && !/^[0-9+()\-\s]{7,20}$/.test(contactPhone)) return res.status(400).json({ message: 'Invalid phone number' });
+// GET /reservations/availability/:restaurantId?date=YYYY-MM-DD&guests=2   (fixed route, before /:id)
+router.get('/availability/:restaurantId', validateId('restaurantId'), async (req, res, next) => {
+  try {
+    const guests = Number(req.query.guests || 2);
+    const { date } = req.query;
+    if (!B.isValidDate(date)) return res.status(400).json({ message: 'date must be YYYY-MM-DD' });
+    if (!Number.isInteger(guests) || guests < 1 || guests > B.MAX_GUESTS) {
+      return res.status(400).json({ message: `guests must be 1-${B.MAX_GUESTS}` });
+    }
+    const restaurant = await Restaurant.findById(req.params.restaurantId);
+    if (!restaurant || restaurant.status !== 'approved') return res.status(404).json({ message: 'Restaurant not found' });
 
-    const startsAt = S.toStartsAt(date, time);
+    const slots = B.slotsFor(restaurant, date);
+    const usage = await SlotUsage.find({ restaurant: restaurant._id, date });
+    const used = new Map(usage.map((u) => [u.time, u.booked]));
     const now = new Date();
-    if (startsAt <= now) return res.status(400).json({ message: 'That time has already passed' });
-    if (startsAt > S.addMinutes(now, S.MAX_ADVANCE_DAYS * 24 * 60)) {
-      return res.status(400).json({ message: `Bookings open up to ${S.MAX_ADVANCE_DAYS} days ahead` });
-    }
-
-    const restaurant = await Restaurant.findById(restaurantId);
-    if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
-
-    const tables = await Table.find({ restaurant: restaurant._id, seats: { $gte: g } }).sort({ seats: 1, label: 1 });
-    if (!tables.length) return res.status(400).json({ message: `No table can seat ${g} guests` });
-
-    await Reservation.init(); // make sure the unique index exists before relying on it
-
-    // Try the smallest suitable table first. If the unique index rejects it (someone else holds
-    // an overlapping block, even a millisecond ago), fall through to the next table.
-    for (const table of tables) {
-      try {
-        const reservation = await Reservation.create({
-          user: req.user._id,
-          restaurant: restaurant._id,
-          table: table._id,
-          date, time, startsAt,
-          endsAt: S.addMinutes(startsAt, S.DURATION_MINUTES),
-          guests: g,
-          contactName: (contactName || req.user.name).trim(),
-          contactPhone: contactPhone || '',
-          slotKeys: S.keysFor(table._id, date, time),
-        });
-        await reservation.populate([{ path: 'restaurant', select: 'name slug' }, { path: 'table', select: 'label seats' }]);
-        return res.status(201).json(reservation);
-      } catch (err) {
-        if (err.code === 11000) continue;
-        throw err;
-      }
-    }
-    return res.status(409).json({ message: 'Sorry, that time was just taken. Please choose another time.' });
+    res.status(200).json({
+      restaurant: restaurant._id, date, guests, seatsPerSlot: restaurant.seatsPerSlot, closed: slots.length === 0,
+      slots: slots.map((s) => {
+        const seatsLeft = Math.max(0, restaurant.seatsPerSlot - (used.get(s.time) || 0));
+        return { time: s.time, seatsLeft, available: B.startsAt(date, s.minutes) > now && seatsLeft >= guests };
+      }),
+    });
   } catch (err) { next(err); }
 });
 
-// GET /reservations/mine   (fixed route, before /:id)
+// POST /reservations   { restaurantId, date, time, guests, contactName?, contactPhone? }
+router.post('/', protect, async (req, res, next) => {
+  try {
+    const { restaurantId, date, time, contactName, contactPhone } = req.body;
+    const guests = Number(req.body.guests);
+
+    if (!mongoose.isValidObjectId(restaurantId)) return res.status(400).json({ message: 'Invalid restaurant' });
+    if (!Number.isInteger(guests) || guests < 1 || guests > B.MAX_GUESTS) return res.status(400).json({ message: `Guests must be 1-${B.MAX_GUESTS}` });
+    if (!B.isValidDate(date)) return res.status(400).json({ message: 'Date must be YYYY-MM-DD' });
+    if (contactPhone && !/^[0-9+()\-\s]{7,20}$/.test(contactPhone)) return res.status(400).json({ message: 'Invalid phone number' });
+
+    const restaurant = await Restaurant.findById(restaurantId);
+    if (!restaurant || restaurant.status !== 'approved') return res.status(404).json({ message: 'Restaurant not found' });
+
+    const slot = B.slotsFor(restaurant, date).find((s) => s.time === time);
+    if (!slot) return res.status(400).json({ message: 'That time is not available for this restaurant on that date' });
+    if (guests > restaurant.seatsPerSlot) return res.status(400).json({ message: `This restaurant seats at most ${restaurant.seatsPerSlot} guests per time slot` });
+
+    const startsAt = B.startsAt(date, slot.minutes);
+    const now = new Date();
+    if (startsAt <= now) return res.status(400).json({ message: 'That time has already passed' });
+    if (startsAt.getTime() > now.getTime() + B.MAX_ADVANCE_DAYS * 86400000) {
+      return res.status(400).json({ message: `Bookings open up to ${B.MAX_ADVANCE_DAYS} days ahead` });
+    }
+
+    await SlotUsage.init(); // make sure the unique index exists before relying on it
+    const claimed = await claimSeats(restaurant._id, date, time, guests, restaurant.seatsPerSlot);
+    if (!claimed) return res.status(409).json({ message: 'Sorry, that time slot is now full. Please choose another time.' });
+
+    try {
+      const reservation = await Reservation.create({
+        user: req.user._id, restaurant: restaurant._id, date, time, startsAt, guests,
+        contactName: (contactName || req.user.name).trim(), contactPhone: contactPhone || '', status: 'confirmed',
+      });
+      await reservation.populate('restaurant', 'name town area');
+      return res.status(201).json(reservation);
+    } catch (err) {
+      await releaseSeats({ restaurant: restaurant._id, date, time, guests }); // undo the claim; nothing was saved
+      throw err;
+    }
+  } catch (err) { next(err); }
+});
+
+// GET /reservations/mine
 router.get('/mine', protect, async (req, res, next) => {
   try {
     const list = await Reservation.find({ user: req.user._id })
-      .populate('restaurant', 'name slug image')
-      .populate('table', 'label seats')
-      .select('-slotKeys')
+      .populate('restaurant', 'name town area imageUrl')
       .sort({ startsAt: -1 });
     res.status(200).json(list);
   } catch (err) { next(err); }
 });
 
-// PATCH /reservations/:id/cancel   (owner of the reservation only; frees the table)
+// PATCH /reservations/:id/cancel  (own reservation; frees the seats exactly once)
 router.patch('/:id/cancel', protect, validateId(), async (req, res, next) => {
   try {
-    const r = await Reservation.findById(req.params.id);
-    if (!r || String(r.user) !== String(req.user._id)) return res.status(404).json({ message: 'Reservation not found' });
-    if (r.status === 'cancelled') return res.status(400).json({ message: 'Already cancelled' });
-    if (r.startsAt <= new Date()) return res.status(400).json({ message: 'Past reservations cannot be cancelled' });
-    r.status = 'cancelled';
-    await r.save();
-    res.status(200).json({ message: 'Reservation cancelled' });
+    const r = await Reservation.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id, status: { $in: ACTIVE }, startsAt: { $gt: new Date() } },
+      { status: 'cancelled' },
+      { new: true }
+    );
+    if (!r) return res.status(404).json({ message: 'Reservation not found, already cancelled, or already past' });
+    await releaseSeats(r);
+    res.status(200).json(r);
   } catch (err) { next(err); }
 });
 
