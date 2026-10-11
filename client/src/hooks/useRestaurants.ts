@@ -11,8 +11,9 @@ export function useRestaurants(filters: Filters, coords: Coords | null, waiting:
   const [error, setError] = useState('')
   const [attempt, setAttempt] = useState(0)
   const [debouncedSearch, setDebouncedSearch] = useState(filters.search.trim())
+  const [debouncedBudget, setDebouncedBudget] = useState(filters.maxPrice)
 
-  const { search, rating, priceLevel, sort, cuisine, diningType, walkMinutes } = filters
+  const { search, rating, priceLevel, sort, cuisine, diningType, walkMinutes, maxPrice } = filters
   const lat = coords?.lat
   const lng = coords?.lng
   // Derived while rendering: use the distance endpoint only when we know where the traveler is
@@ -23,6 +24,15 @@ export function useRestaurants(filters: Filters, coords: Coords | null, waiting:
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 400)
     return () => clearTimeout(timer)
   }, [search])
+
+  // Same for the budget box, so each digit typed does not fire a request
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedBudget(maxPrice), 400)
+    return () => clearTimeout(timer)
+  }, [maxPrice])
+
+  // A budget of 0 or an empty box means no budget
+  const budget = Number(debouncedBudget) > 0 ? debouncedBudget : undefined
 
   useEffect(() => {
     if (waiting) return // wait for the browser to give us the location
@@ -37,7 +47,11 @@ export function useRestaurants(filters: Filters, coords: Coords | null, waiting:
       priceLevel: priceLevel || undefined,
       cuisine: cuisine || undefined,
       diningType: diningType || undefined,
+      maxPrice: budget,
     }
+
+    // With a budget and no chosen sort, show the cheapest restaurants first
+    const searchSort = sort || (budget ? 'price' : undefined)
 
     const request = byDistance
       ? api.get<Restaurant[]>('/restaurants/nearby', {
@@ -45,7 +59,7 @@ export function useRestaurants(filters: Filters, coords: Coords | null, waiting:
           signal: controller.signal,
         })
       : api.get<Restaurant[]>('/restaurants/search', {
-          params: { ...shared, sort: sort || undefined },
+          params: { ...shared, sort: searchSort },
           signal: controller.signal,
         })
 
@@ -60,7 +74,7 @@ export function useRestaurants(filters: Filters, coords: Coords | null, waiting:
       })
 
     return () => controller.abort()
-  }, [debouncedSearch, rating, priceLevel, sort, cuisine, diningType, walkMinutes, byDistance, lat, lng, waiting, attempt])
+  }, [debouncedSearch, rating, priceLevel, sort, cuisine, diningType, walkMinutes, budget, byDistance, lat, lng, waiting, attempt])
 
   return { restaurants, loading: loading || waiting, error, retry: () => setAttempt((a) => a + 1) }
 }

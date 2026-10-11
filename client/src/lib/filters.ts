@@ -8,6 +8,7 @@ export type Filters = {
   sort: string
   cuisine: string
   diningType: string
+  maxPrice: string // budget in pesos, kept as text so the input can be empty
 }
 
 export const emptyFilters: Filters = {
@@ -18,6 +19,7 @@ export const emptyFilters: Filters = {
   sort: '',
   cuisine: '',
   diningType: '',
+  maxPrice: '',
 }
 
 const same = (list: string[]): Option[] => list.map((v) => ({ value: v, label: v }))

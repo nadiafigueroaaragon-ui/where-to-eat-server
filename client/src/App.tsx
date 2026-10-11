@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './context/AuthProvider'
 import Home from './pages/Home'
@@ -18,7 +19,7 @@ import Register from './pages/Register'
 export default function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-cream font-sans">
+      <div className="flex min-h-screen flex-col bg-cream font-sans">
         <Navbar />
         <Routes>
           {/* Public */}
@@ -47,6 +48,7 @@ export default function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Footer />
       </div>
     </AuthProvider>
   )
