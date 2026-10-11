@@ -17,7 +17,7 @@ app.get('/', (req, res) => res.status(200).json({ message: 'Where to Eat? API is
 // ---- registered before /restaurants/:id, so keep each router's own order correct.
 app.use('/auth', require('./routes/auth'));
 app.use('/users', require('./routes/users'));
-app.use('/restaurants', require('./routes/search'));        
+//app.use('/restaurants', require('./routes/search'));        
 app.use('/restaurants', require('./routes/restaurants'));   
 // app.use('/reservations', require('./routes/reservations')); // Ashton + Nadia
 // app.use('/reviews', require('./routes/reviews'));           // Mhir
