@@ -1,14 +1,15 @@
-// San Fernando seed (10 restaurants). Usage: require('./seeds/sanFernandoRestaurants')(ownerId) -> array for Restaurant.insertMany
+// San Fernando seed (10 restaurants). Runs from seed/seed.js as async (ctx) => {...}
 //
 // !! VERIFY BEFORE THE DEFENSE !!  The names/descriptions come from the team guide. Everything else
 // (coordinates, hours, prices, seats, exact addresses) is a ROUGH PLACEHOLDER I could not verify.
 // For each place: open Google Maps -> right-click the pin -> click the numbers to copy "lat, lng" -> fix lat/lng below.
+const Restaurant = require('../../models/Restaurant');
 const { DAYS } = require('../../config/constants');
+
+const TOWN = 'San Fernando';
 
 const hours = (open, close, closedDays = []) =>
   Object.fromEntries(DAYS.map((d) => [d, { open, close, closed: closedDays.includes(d) }]));
-
-const base = { town: 'San Fernando' };
 
 const data = [
   { name: "Denlim's Kitchen", area: 'San Agustin', address: 'San Agustin, City of San Fernando, Pampanga',
@@ -53,10 +54,16 @@ const data = [
     description: 'Western comfort food, a carabao beef specialty and desserts at Greenfields Square.', status: 'pending' },
 ];
 
-module.exports = (ownerId) =>
-  data.map(({ lat, lng, ...r }) => ({
-    ...base,
+module.exports = async (ctx) => {
+  const owner = ctx.users.owners[0];
+
+  const docs = data.map(({ lat, lng, ...r }) => ({
     ...r,
-    owner: ownerId,
+    town: TOWN,
+    owner: owner._id,
     location: { type: 'Point', coordinates: [lng, lat] }, // GeoJSON order: [lng, lat]
   }));
+
+  const created = await Restaurant.insertMany(docs);
+  ctx.restaurants = [...(ctx.restaurants || []), ...created];
+};
