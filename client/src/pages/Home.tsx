@@ -2,6 +2,9 @@ import { useState } from 'react'
 import Hero from '../components/Hero'
 import FilterChips from '../components/FilterChips'
 import RestaurantCard from '../components/RestaurantCard'
+import QuickReservation from '../components/QuickReservation'
+import ReviewsPreview from '../components/ReviewsPreview'
+import OwnerCta from '../components/OwnerCta'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { useRestaurants } from '../hooks/useRestaurants'
 import { emptyFilters, type Filters } from '../lib/filters'
@@ -99,6 +102,10 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      <QuickReservation />
+      <ReviewsPreview />
+      <OwnerCta />
     </main>
   )
 }
