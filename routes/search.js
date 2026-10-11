@@ -59,10 +59,10 @@ function distanceMeters(lat1, lng1, lat2, lng2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
-// GET /restaurants/nearby?lat=&lng=&minutes=10&q=&cuisine=&diningType=&priceLevel=&minRating=
+// GET /restaurants/nearby?lat=&lng=&minutes=10&q=&cuisine=&diningType=&priceLevel=&minRating=&maxPrice=
 router.get('/nearby', async (req, res, next) => {
   try {
-    const { q, lat, lng, cuisine, diningType, priceLevel, minRating } = req.query;
+    const { q, lat, lng, cuisine, diningType, priceLevel, minRating, maxPrice } = req.query;
     const minutes = req.query.minutes === undefined ? 10 : Number(req.query.minutes);
     const la = Number(lat), lo = Number(lng);
 
@@ -96,6 +96,10 @@ router.get('/nearby', async (req, res, next) => {
     if (minRating !== undefined) {
       if (Number.isNaN(Number(minRating))) return res.status(400).json({ message: 'minRating must be a number' });
       filter.rating = { $gte: Number(minRating) };
+    }
+    if (maxPrice !== undefined) {
+      if (Number.isNaN(Number(maxPrice))) return res.status(400).json({ message: 'maxPrice must be a number' });
+      filter.averageMealCost = { $lte: Number(maxPrice) };
     }
 
     const found = await Restaurant.find(filter).lean();

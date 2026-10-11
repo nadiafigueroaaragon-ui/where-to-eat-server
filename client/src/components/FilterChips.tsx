@@ -40,6 +40,25 @@ export default function FilterChips({ filters, onChange }: Props) {
           )
         })}
 
+        {/* Budget in pesos: digits only, empty means no budget */}
+        <label
+          className={`inline-flex items-center gap-1 rounded-full border px-4 py-1 text-xs transition-colors ${
+            filters.maxPrice ? 'border-olive bg-olive text-cream' : 'border-brown/60 text-brown'
+          }`}
+        >
+          <span aria-hidden="true">Budget ₱</span>
+          <span className="sr-only">Budget in pesos</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="e.g. 500"
+            maxLength={6}
+            value={filters.maxPrice}
+            onChange={(e) => onChange({ ...filters, maxPrice: e.target.value.replace(/\D/g, '') })}
+            className="w-16 bg-transparent text-xs outline-none placeholder:text-current placeholder:opacity-50"
+          />
+        </label>
+
         {hasFilters && (
           <button
             type="button"
