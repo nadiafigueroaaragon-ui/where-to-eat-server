@@ -67,11 +67,11 @@ const data = [
   { slug: 'chefbaboy', name: 'Chef Baboy', area: 'Sindalan', address: 'Greenfields Square, Sindalan, City of San Fernando, Pampanga',
     lat: 15.0652, lng: 120.6604, cuisine: 'Asian', diningType: 'buffet', priceLevel: 'moderate',
     averageMealCost: 500, seatsPerSlot: 40, openingHours: hours('11:00', '23:00'),
-    description: 'Unlimited premium Korean BBQ and samgyeopsal at Greenfields Square.', status: 'pending' },
+    description: 'Unlimited premium Korean BBQ and samgyeopsal at Greenfields Square.', status: 'approved' },
   { slug: 'noelle', name: 'Caf\u00e9 Noelle', area: 'Sindalan', address: 'Greenfields Square, Sindalan, City of San Fernando, Pampanga',
     lat: 15.0658, lng: 120.6598, cuisine: 'Western/Italian', diningType: 'casual dining', priceLevel: 'moderate',
     averageMealCost: 450, seatsPerSlot: 30, openingHours: hours('10:00', '22:00'),
-    description: 'Western comfort food, a carabao beef specialty and desserts at Greenfields Square.', status: 'pending' },
+    description: 'Western comfort food, a carabao beef specialty and desserts at Greenfields Square.', status: 'approved' },
 ];
 
 module.exports = async (ctx) => {
