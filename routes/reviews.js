@@ -23,6 +23,19 @@ const pick = (body) => {
 
 const RESTAURANT_FIELDS = 'name town area imageUrl';
 
+// GET /reviews?limit=3 - public: the newest approved reviews across all restaurants (home page)
+router.get('/', async (req, res, next) => {
+  try {
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+    const reviews = await Review.find({ status: 'approved' })
+      .populate('restaurant', RESTAURANT_FIELDS)
+      .populate('user', 'name')
+      .sort({ createdAt: -1 })
+      .limit(limit);
+    res.status(200).json(reviews);
+  } catch (err) { next(err); }
+});
+
 // GET /reviews/mine - the traveler's own reviews (every status)
 router.get('/mine', protect, async (req, res, next) => {
   try {
