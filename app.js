@@ -20,8 +20,8 @@ app.use('/users', require('./routes/users'));
 app.use('/towns', require('./routes/towns'));
 app.use('/restaurants', require('./routes/search'));
 app.use('/restaurants', require('./routes/restaurants'));
-// app.use('/reservations', require('./routes/reservations')); // Ashton + Nadia
-app.use('/reviews', require('./routes/reviews'));                   // Mhir
+app.use('/reservations', require('./routes/reservations')); // Ashton + Nadia
+app.use('/reviews', require('./routes/reviews'));           // Mhir
 app.use('/restaurants', require('./routes/restaurantReviews'));    // Mhir (GET /restaurants/:id/reviews)
 
 app.use(notFound);     // must stay second-to-last

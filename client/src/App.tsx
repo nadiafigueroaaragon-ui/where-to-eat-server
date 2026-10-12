@@ -19,6 +19,8 @@ import MyReviews from './pages/MyReviews'
 import ReviewModeration from './pages/ReviewModeration'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import BookTable from './pages/BookTable'
+import MyReservations from './pages/MyReservations'
 
 // Top navbar and footer for every page except the admin pages
 function SiteLayout() {
@@ -59,7 +61,14 @@ export default function App() {
           <Route path="/reviews/:id/edit" element={<WriteReview mode="edit" />} />
 
           <Route path="*" element={<NotFound />} />
+
+        {/* Booking: logged-in users only */}
+          <Route element={<ProtectedRoute />}>
+          <Route path="/restaurants/:id/book" element={<BookTable />} />
+          <Route path="/reservations" element={<MyReservations />} />
         </Route>
+        </Route>
+
 
         {/* Admin only: sidebar layout, no top navbar or footer */}
         <Route element={<ProtectedRoute roles={['admin']} />}>
