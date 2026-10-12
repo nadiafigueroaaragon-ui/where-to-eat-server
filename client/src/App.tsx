@@ -9,6 +9,8 @@ import Towns from './pages/Towns'
 import TownDetails from './pages/TownDetails'
 import RestaurantDetails from './pages/RestaurantDetails'
 import OwnerDashboard from './pages/OwnerDashboard'
+import OwnerReservations from './pages/OwnerReservations'
+import OwnerReviews from './pages/OwnerReviews'
 import RestaurantFormPage from './pages/RestaurantFormPage'
 import ManageRestaurants from './pages/ManageRestaurants'
 import RestaurantApproval from './pages/RestaurantApproval'
@@ -45,12 +47,14 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Owner or admin: create and edit restaurants, owner dashboard.
+          {/* Owner or admin: create and edit restaurants, owner pages.
               /restaurants/new must stay above /restaurants/:id */}
           <Route element={<ProtectedRoute roles={['owner', 'admin']} />}>
             <Route path="/restaurants/new" element={<RestaurantFormPage />} />
             <Route path="/restaurants/:id/edit" element={<RestaurantFormPage />} />
             <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+            <Route path="/owner/reservations" element={<OwnerReservations />} />
+            <Route path="/owner/reviews" element={<OwnerReviews />} />
           </Route>
 
           <Route path="/restaurants/:id" element={<RestaurantDetails />} />
@@ -60,15 +64,14 @@ export default function App() {
           <Route path="/reviews" element={<MyReviews />} />
           <Route path="/reviews/:id/edit" element={<WriteReview mode="edit" />} />
 
-          <Route path="*" element={<NotFound />} />
-
-        {/* Booking: logged-in users only */}
+          {/* Booking: logged-in users only */}
           <Route element={<ProtectedRoute />}>
-          <Route path="/restaurants/:id/book" element={<BookTable />} />
-          <Route path="/reservations" element={<MyReservations />} />
-        </Route>
-        </Route>
+            <Route path="/restaurants/:id/book" element={<BookTable />} />
+            <Route path="/reservations" element={<MyReservations />} />
+          </Route>
 
+          <Route path="*" element={<NotFound />} />
+        </Route>
 
         {/* Admin only: sidebar layout, no top navbar or footer */}
         <Route element={<ProtectedRoute roles={['admin']} />}>

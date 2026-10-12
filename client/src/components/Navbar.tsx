@@ -8,10 +8,6 @@ type NavItem = { to: string; label: string }
 // Set to true once there is a /reviews page, so the link stops leading to "Page not found"
 const SHOW_REVIEWS = true
 
-// The reservations pages are not built yet. Change these paths once they exist.
-const TRAVELER_RESERVATIONS = '/reservations'
-const OWNER_RESERVATIONS = '/owner/reservations'
-
 const reviewsLink: NavItem[] = SHOW_REVIEWS ? [{ to: '/reviews', label: 'Reviews' }] : []
 
 // Guest
@@ -21,20 +17,20 @@ const guestLinks: NavItem[] = [
   ...reviewsLink,
 ]
 
-// Traveler
+// Traveler: their own bookings and reviews
 const travelerLinks: NavItem[] = [
   { to: '/', label: 'Home' },
-  { to: TRAVELER_RESERVATIONS, label: 'Reservations' },
+  { to: '/reservations', label: 'Reservations' },
   ...reviewsLink,
   { to: '/towns', label: 'Towns' },
 ]
 
-// Owner
+// Owner: bookings and reviews made at their restaurants
 const ownerLinks: NavItem[] = [
   { to: '/owner/dashboard', label: 'Restaurant' },
   { to: '/restaurants/new', label: 'Apply' },
-  { to: OWNER_RESERVATIONS, label: 'Reservations' },
-  ...reviewsLink,
+  { to: '/owner/reservations', label: 'Reservations' },
+  { to: '/owner/reviews', label: 'Reviews' },
 ]
 
 // Admin while browsing the public site. Admin pages use the sidebar (AdminLayout) instead.

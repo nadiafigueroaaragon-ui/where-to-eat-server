@@ -46,6 +46,27 @@ router.get('/mine', protect, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /reviews/owner - approved reviews written on the owner's restaurants (an admin sees all)
+router.get('/owner', protect, async (req, res, next) => {
+  try {
+    if (!['owner', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'You do not have permission to do this' });
+    }
+    const Restaurant = mongoose.models.Restaurant || require('../models/Restaurant');
+    const filter = req.user.role === 'admin' ? {} : { owner: req.user._id };
+    const restaurants = await Restaurant.find(filter).select('_id');
+    const reviews = await Review.find({
+      restaurant: { $in: restaurants.map((r) => r._id) },
+      status: 'approved',
+    })
+      .populate('restaurant', RESTAURANT_FIELDS)
+      .populate('user', 'name')
+      .sort({ createdAt: -1 })
+      .limit(500);
+    res.status(200).json(reviews);
+  } catch (err) { next(err); }
+});
+
 // GET /reviews/pending - admin moderation queue (oldest first)
 router.get('/pending', protect, requireRole('admin'), async (req, res, next) => {
   try {
