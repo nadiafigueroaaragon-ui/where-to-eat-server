@@ -86,6 +86,12 @@ export default function OwnerDashboard() {
               <div className="flex items-center gap-2">
                 <StatusBadge status={r.status} />
                 <Link
+                  to={`/owner/preview/${r._id}`}
+                  className="rounded-full border border-brown/30 px-3 py-1 text-xs"
+                >
+                  Preview
+                </Link>
+                <Link
                   to={`/restaurants/${r._id}/edit`}
                   className="rounded-full border border-brown/30 px-3 py-1 text-xs"
                 >

@@ -53,6 +53,7 @@ export default function App() {
             <Route path="/restaurants/new" element={<RestaurantFormPage />} />
             <Route path="/restaurants/:id/edit" element={<RestaurantFormPage />} />
             <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+            <Route path="/owner/preview/:id" element={<RestaurantDetails preview />} />
             <Route path="/owner/reservations" element={<OwnerReservations />} />
             <Route path="/owner/reviews" element={<OwnerReviews />} />
           </Route>

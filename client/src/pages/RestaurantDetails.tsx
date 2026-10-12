@@ -27,6 +27,25 @@ type DayHours = { open?: string; close?: string; closed?: boolean }
 const STARS = [5, 4, 3, 2, 1]
 const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
+// What the owner sees at the top of the preview, per application status
+const BANNER = {
+  pending: {
+    tone: 'bg-sun/40 text-brown',
+    title: 'Pending approval',
+    text: 'This is how your application will look to diners. Only you and the admins can see it until an admin approves it.',
+  },
+  approved: {
+    tone: 'bg-olive/15 text-olive',
+    title: 'Approved',
+    text: 'Your restaurant is live. This is how diners see it.',
+  },
+  rejected: {
+    tone: 'bg-brick/10 text-brick',
+    title: 'Not approved',
+    text: 'This application was not approved, so diners cannot see it. You can still review the details below.',
+  },
+} as const
+
 // "13:30" -> "1:30 PM"
 function to12h(hhmm?: string) {
   if (!hhmm) return ''
@@ -35,7 +54,8 @@ function to12h(hhmm?: string) {
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${suffix}`
 }
 
-export default function RestaurantDetails() {
+// preview = the owner's view of their own restaurant (/owner/preview/:id)
+export default function RestaurantDetails({ preview = false }: { preview?: boolean }) {
   const { id } = useParams()
   const restaurant = useApi<Details>(id ? `/restaurants/${id}` : null)
   const reviews = useRestaurantReviews(id)
@@ -53,7 +73,9 @@ export default function RestaurantDetails() {
     return (
       <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-8">
         <ErrorState message={restaurant.error || 'Restaurant not found'} onRetry={restaurant.retry}>
-          <ButtonLink to="/" variant="secondary">Back to home</ButtonLink>
+          <ButtonLink to={preview ? '/owner/dashboard' : '/'} variant="secondary">
+            {preview ? 'Back to my restaurants' : 'Back to home'}
+          </ButtonLink>
         </ErrorState>
       </main>
     )
@@ -76,13 +98,42 @@ export default function RestaurantDetails() {
   const counts = STARS.map((s) => list.filter((x) => x.rating === s).length)
   const reviewTo = hasToken() ? `/restaurants/${r._id}/review` : '/login'
   const reviewLabel = hasToken() ? 'Write a review' : 'Log in to write a review'
+  const banner = BANNER[r.status ?? 'pending']
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-4 sm:px-8">
-      <Link to="/" className="inline-flex items-center gap-1 text-sm text-brown/70 hover:text-brown">
+      <Link
+        to={preview ? '/owner/dashboard' : '/'}
+        className="inline-flex items-center gap-1 text-sm text-brown/70 hover:text-brown"
+      >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        All restaurants
+        {preview ? 'My restaurants' : 'All restaurants'}
       </Link>
+
+      {preview && (
+        <div role="status" className={`mt-3 flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 ${banner.tone}`}>
+          <div>
+            <p className="text-sm font-semibold">Preview · {banner.title}</p>
+            <p className="mt-0.5 text-sm">{banner.text}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {r.status === 'approved' && (
+              <Link
+                to={`/restaurants/${r._id}`}
+                className="rounded-full border border-current px-4 py-1.5 text-xs font-semibold"
+              >
+                View public page
+              </Link>
+            )}
+            <Link
+              to={`/restaurants/${r._id}/edit`}
+              className="rounded-full bg-brown px-4 py-1.5 text-xs font-semibold text-cream transition-colors hover:bg-olive"
+            >
+              Edit application
+            </Link>
+          </div>
+        </div>
+      )}
 
       <article className="mt-3">
         {mainPhoto ? (
@@ -151,13 +202,24 @@ export default function RestaurantDetails() {
               {openNow ? 'Open now' : 'Closed now'}
             </span>
           )}
-          <Link
-            to={`/restaurants/${r._id}/book`}
-            className="ml-auto inline-flex items-center gap-2 rounded-full bg-brown px-5 py-2 text-sm text-cream transition-colors hover:bg-olive"
-          >
-            <CalendarCheck className="h-4 w-4" aria-hidden="true" />
-            Book a reservation
-          </Link>
+          {preview ? (
+            <span
+              aria-disabled="true"
+              title="Booking opens once the restaurant is approved"
+              className="ml-auto inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-brown/40 px-5 py-2 text-sm text-cream"
+            >
+              <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+              Book a reservation
+            </span>
+          ) : (
+            <Link
+              to={`/restaurants/${r._id}/book`}
+              className="ml-auto inline-flex items-center gap-2 rounded-full bg-brown px-5 py-2 text-sm text-cream transition-colors hover:bg-olive"
+            >
+              <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+              Book a reservation
+            </Link>
+          )}
         </div>
 
         {r.description && <p className="mt-3 text-sm leading-relaxed text-brown/80">{r.description}</p>}
@@ -215,50 +277,61 @@ export default function RestaurantDetails() {
         )}
 
         <section className="mt-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-brown">
-              Reviews
-              {!reviews.loading && !reviews.error && (
-                <span className="ml-2 font-normal text-brown/60">({list.length})</span>
+          {preview ? (
+            <>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-brown">Reviews</h2>
+              <div className="mt-3 rounded-2xl bg-brown/5 p-6 text-center">
+                <p className="text-sm text-brown">Diners can write reviews once your restaurant is approved.</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-brown">
+                  Reviews
+                  {!reviews.loading && !reviews.error && (
+                    <span className="ml-2 font-normal text-brown/60">({list.length})</span>
+                  )}
+                </h2>
+                <ButtonLink to={reviewTo} variant="accent">
+                  {reviewLabel}
+                </ButtonLink>
+              </div>
+
+              {reviews.loading && <LoadingState rows={2} className="mt-4" />}
+              {reviews.error && (
+                <div className="mt-4">
+                  <ErrorState message={reviews.error} onRetry={reviews.retry} />
+                </div>
               )}
-            </h2>
-            <ButtonLink to={reviewTo} variant="accent">
-              {reviewLabel}
-            </ButtonLink>
-          </div>
 
-          {reviews.loading && <LoadingState rows={2} className="mt-4" />}
-          {reviews.error && (
-            <div className="mt-4">
-              <ErrorState message={reviews.error} onRetry={reviews.retry} />
-            </div>
-          )}
+              {!reviews.loading && !reviews.error && list.length === 0 && (
+                <div className="mt-4">
+                  <EmptyState message="No reviews yet. Been here? Be the first to share your visit." />
+                </div>
+              )}
 
-          {!reviews.loading && !reviews.error && list.length === 0 && (
-            <div className="mt-4">
-              <EmptyState message="No reviews yet. Been here? Be the first to share your visit." />
-            </div>
-          )}
-
-          {!reviews.loading && !reviews.error && list.length > 0 && (
-            <div className="mt-4 grid gap-6 md:grid-cols-[14rem_1fr]">
-              <div className="flex flex-col gap-1 self-start rounded-2xl bg-brown/5 p-4" aria-label="Rating breakdown">
-                {STARS.map((s, i) => (
-                  <div key={s} className="flex items-center gap-2 text-xs text-brown">
-                    <span className="w-3">{s}</span>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-brown/10">
-                      <div className="h-full bg-sun" style={{ width: `${(counts[i] / list.length) * 100}%` }} />
-                    </div>
-                    <span className="w-4 text-right">{counts[i]}</span>
+              {!reviews.loading && !reviews.error && list.length > 0 && (
+                <div className="mt-4 grid gap-6 md:grid-cols-[14rem_1fr]">
+                  <div className="flex flex-col gap-1 self-start rounded-2xl bg-brown/5 p-4" aria-label="Rating breakdown">
+                    {STARS.map((s, i) => (
+                      <div key={s} className="flex items-center gap-2 text-xs text-brown">
+                        <span className="w-3">{s}</span>
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-brown/10">
+                          <div className="h-full bg-sun" style={{ width: `${(counts[i] / list.length) * 100}%` }} />
+                        </div>
+                        <span className="w-4 text-right">{counts[i]}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div className="flex flex-col gap-4">
-                {list.map((review) => (
-                  <ReviewCard key={review._id} review={review} />
-                ))}
-              </div>
-            </div>
+                  <div className="flex flex-col gap-4">
+                    {list.map((review) => (
+                      <ReviewCard key={review._id} review={review} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
       </article>
