@@ -3,17 +3,21 @@
 // !! VERIFY BEFORE THE DEFENSE !!  The names/descriptions come from the team guide. Everything else
 // (coordinates, hours, prices, seats, exact addresses) is a ROUGH PLACEHOLDER I could not verify.
 // For each place: open Google Maps -> right-click the pin -> click the numbers to copy "lat, lng" -> fix lat/lng below.
+<<<<<<< HEAD
 //
 // PHOTOS: put pictures in client/public/images named  <slug>.jpg  (main photo) and  <slug>1.jpg ... <slug>5.jpg
 // (.jpeg / .webp / .png also work). Each restaurant's `slug` is listed below. Only files that really exist
 // are saved, so a missing photo never shows as a broken image. Add photos later, then re-run the seed.
 const fs = require('fs');
 const path = require('path');
+=======
+>>>>>>> origin/main
 const Restaurant = require('../../models/Restaurant');
 const { DAYS } = require('../../config/constants');
 
 const TOWN = 'San Fernando';
 
+<<<<<<< HEAD
 const IMAGE_DIR = path.join(__dirname, '../../client/public/images');
 const EXTENSIONS = ['jpg', 'jpeg', 'webp', 'png'];
 
@@ -28,6 +32,8 @@ const gallery = (slug) => {
   return imageUrl ? { imageUrl, images } : {};
 };
 
+=======
+>>>>>>> origin/main
 const hours = (open, close, closedDays = []) =>
   Object.fromEntries(DAYS.map((d) => [d, { open, close, closed: closedDays.includes(d) }]));
 
@@ -77,9 +83,14 @@ const data = [
 module.exports = async (ctx) => {
   const owner = ctx.users.owners[0];
 
+<<<<<<< HEAD
   const docs = data.map(({ lat, lng, slug, ...r }) => ({
     ...r,
     ...gallery(slug),
+=======
+  const docs = data.map(({ lat, lng, ...r }) => ({
+    ...r,
+>>>>>>> origin/main
     town: TOWN,
     owner: owner._id,
     location: { type: 'Point', coordinates: [lng, lat] }, // GeoJSON order: [lng, lat]
@@ -87,4 +98,8 @@ module.exports = async (ctx) => {
 
   const created = await Restaurant.insertMany(docs);
   ctx.restaurants = [...(ctx.restaurants || []), ...created];
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> origin/main
