@@ -26,7 +26,8 @@ app.use('/restaurants', require('./routes/search'));
 app.use('/restaurants', require('./routes/restaurants'));
 >>>>>>> origin/main
 // app.use('/reservations', require('./routes/reservations')); // Ashton + Nadia
-// app.use('/reviews', require('./routes/reviews'));           // Mhir
+app.use('/reviews', require('./routes/reviews'));                   // Mhir
+app.use('/restaurants', require('./routes/restaurantReviews'));    // Mhir (GET /restaurants/:id/reviews)
 
 app.use(notFound);     // must stay second-to-last
 app.use(errorHandler); // must stay last

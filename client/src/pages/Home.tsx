@@ -2,6 +2,9 @@ import { useState } from 'react'
 import Hero from '../components/Hero'
 import FilterChips from '../components/FilterChips'
 import RestaurantCard from '../components/RestaurantCard'
+import QuickReservation from '../components/QuickReservation'
+import ReviewsPreview from '../components/ReviewsPreview'
+import OwnerCta from '../components/OwnerCta'
 import { useGeolocation } from '../hooks/useGeolocation'
 import { useRestaurants } from '../hooks/useRestaurants'
 import { emptyFilters, type Filters } from '../lib/filters'
@@ -16,6 +19,7 @@ export default function Home() {
   const waiting = Boolean(filters.walkMinutes) && geo.status === 'loading'
   const locationFailed = Boolean(filters.walkMinutes) && (geo.status === 'denied' || geo.status === 'unsupported')
   const hasFilters = Object.values(filters).some(Boolean)
+  const budget = Number(filters.maxPrice) > 0 ? Number(filters.maxPrice) : 0
 
   const { restaurants, loading, error, retry } = useRestaurants(filters, geo.coords, waiting)
 
@@ -44,7 +48,12 @@ export default function Home() {
       <section className="mx-auto mt-10 max-w-6xl px-4 sm:px-8">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-brown">
           {hasFilters ? 'Results' : 'Top rated restaurants'}
-          {!loading && !error && <span className="ml-2 font-normal text-brown/60">({restaurants.length})</span>}
+          {!loading && !error && (
+            <span className="ml-2 font-normal text-brown/60">
+              ({restaurants.length}
+              {budget > 0 && ` within ₱${budget.toLocaleString()}`})
+            </span>
+          )}
         </h2>
 
         {loading && (
@@ -70,7 +79,11 @@ export default function Home() {
 
         {!loading && !error && restaurants.length === 0 && (
           <div className="mt-4 rounded-2xl bg-brown/5 p-8 text-center">
-            <p className="text-sm text-brown">No restaurants match these filters yet.</p>
+            <p className="text-sm text-brown">
+              {budget > 0
+                ? `No restaurants within ₱${budget.toLocaleString()}. Try a higher budget or clear some filters.`
+                : 'No restaurants match these filters yet.'}
+            </p>
             <button
               type="button"
               onClick={() => setFilters(emptyFilters)}
@@ -89,6 +102,10 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      <QuickReservation />
+      <ReviewsPreview />
+      <OwnerCta />
     </main>
   )
 }

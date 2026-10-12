@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import Footer from './components/Footer'
 import ProtectedRoute from './components/ProtectedRoute'
 import { AuthProvider } from './context/AuthProvider'
 import Home from './pages/Home'
@@ -12,13 +13,16 @@ import ManageRestaurants from './pages/ManageRestaurants'
 import RestaurantApproval from './pages/RestaurantApproval'
 import NotFound from './pages/NotFound'
 import ManageTowns from './pages/ManageTowns'
+import WriteReview from './pages/WriteReview'
+import MyReviews from './pages/MyReviews'
+import ReviewModeration from './pages/ReviewModeration'
 import Login from './pages/Login'
 import Register from './pages/Register'
 
 export default function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-cream font-sans">
+      <div className="flex min-h-screen flex-col bg-cream font-sans">
         <Navbar />
         <Routes>
           {/* Public */}
@@ -38,15 +42,22 @@ export default function App() {
 
           <Route path="/restaurants/:id" element={<RestaurantDetails />} />
 
+          {/* Reviews */}
+          <Route path="/restaurants/:id/review" element={<WriteReview mode="create" />} />
+          <Route path="/reviews" element={<MyReviews />} />
+          <Route path="/reviews/:id/edit" element={<WriteReview mode="edit" />} />
+
           {/* Admin only */}
           <Route element={<ProtectedRoute roles={['admin']} />}>
             <Route path="/admin/restaurants" element={<ManageRestaurants />} />
             <Route path="/admin/approvals" element={<RestaurantApproval />} />
             <Route path="/admin/towns" element={<ManageTowns />} />
+            <Route path="/admin/reviews" element={<ReviewModeration />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Footer />
       </div>
     </AuthProvider>
   )
