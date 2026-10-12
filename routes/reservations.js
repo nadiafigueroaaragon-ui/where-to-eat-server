@@ -107,6 +107,22 @@ router.get('/mine', protect, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+// GET /reservations/owner - bookings made at the owner's restaurants (an admin sees every restaurant)
+router.get('/owner', protect, async (req, res, next) => {
+  try {
+    if (!['owner', 'admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'You do not have permission to do this' });
+    }
+    const filter = req.user.role === 'admin' ? {} : { owner: req.user._id };
+    const restaurants = await Restaurant.find(filter).select('_id');
+    const list = await Reservation.find({ restaurant: { $in: restaurants.map((r) => r._id) } })
+      .populate('restaurant', 'name town area')
+      .sort({ startsAt: -1 })
+      .limit(500);
+    res.status(200).json(list);
+  } catch (err) { next(err); }
+});
+
 // PATCH /reservations/:id/cancel  (own reservation; frees the seats exactly once)
 router.patch('/:id/cancel', protect, validateId(), async (req, res, next) => {
   try {
