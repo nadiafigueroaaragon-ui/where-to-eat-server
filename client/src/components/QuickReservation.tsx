@@ -37,7 +37,8 @@ export default function QuickReservation() {
 
   // Derived while rendering, not stored in state
   const selected = options.find((r) => r._id === restaurantId)
-  const carousel = options.slice(0, 12)
+  // The carousel shows the same restaurants as the dropdown
+  const carousel = options
 
   function choose(id: string) {
     setRestaurantId(id)
@@ -57,8 +58,7 @@ export default function QuickReservation() {
       return
     }
     // TODO: when the booking page exists, change this to its route, for example `/restaurants/${restaurantId}/book`
-    navigate(`/restaurants/${restaurantId}?date=${date || today()}&guests=${guests}`)
-  }
+navigate(`/restaurants/${restaurantId}/book?date=${date || today()}&guests=${guests}`)  }
 
   const label = 'mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-brown/70'
   const field =
