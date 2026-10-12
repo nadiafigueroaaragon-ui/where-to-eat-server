@@ -42,7 +42,7 @@ const adminSiteLinks: NavItem[] = [
   { to: '/', label: 'Home' },
   { to: '/towns', label: 'Towns' },
   ...reviewsLink,
-  { to: '/admin/approvals', label: 'Admin' },
+  { to: '/admin/approvals', label: 'Manage' },
 ]
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
