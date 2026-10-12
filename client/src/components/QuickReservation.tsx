@@ -37,7 +37,8 @@ export default function QuickReservation() {
 
   // Derived while rendering, not stored in state
   const selected = options.find((r) => r._id === restaurantId)
-  const carousel = options.slice(0, 12)
+  // The carousel shows the same restaurants as the dropdown
+  const carousel = options
 
   function choose(id: string) {
     setRestaurantId(id)
