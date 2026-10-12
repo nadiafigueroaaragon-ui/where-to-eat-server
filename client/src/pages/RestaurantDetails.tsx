@@ -44,14 +44,14 @@ export default function RestaurantDetails() {
 
   if (restaurant.loading) {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-8">
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-8">
         <LoadingState rows={3} />
       </main>
     )
   }
   if (restaurant.error || !restaurant.data) {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-8">
+      <main className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-8">
         <ErrorState message={restaurant.error || 'Restaurant not found'} onRetry={restaurant.retry}>
           <ButtonLink to="/" variant="secondary">Back to home</ButtonLink>
         </ErrorState>
@@ -78,7 +78,7 @@ export default function RestaurantDetails() {
   const reviewLabel = hasToken() ? 'Write a review' : 'Log in to write a review'
 
   return (
-    <main className="mx-auto max-w-6xl px-4 pb-16 pt-4 sm:px-8">
+    <main className="mx-auto w-full max-w-6xl px-4 pb-16 pt-4 sm:px-8">
       <Link to="/" className="inline-flex items-center gap-1 text-sm text-brown/70 hover:text-brown">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         All restaurants
