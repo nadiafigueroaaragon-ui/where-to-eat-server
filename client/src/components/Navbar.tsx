@@ -16,6 +16,7 @@ const adminLinks = [
   { to: '/admin/approvals', label: 'Approvals' },
   { to: '/admin/restaurants', label: 'Restaurants' },
   { to: '/admin/towns', label: 'Manage towns' },
+  { to: '/admin/reviews', label: 'Reviews' },
 ]
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
